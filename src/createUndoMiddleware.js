@@ -21,9 +21,13 @@ export default function createUndoMiddleware({getViewState, setViewState, revert
       if (undoItem) {
         acting = true
         setViewState && dispatch(setViewState(undoItem.afterState))
-        dispatch(getUndoAction(undoItem))
+        const promise = dispatch(getUndoAction(undoItem))
+        if (typeof promise.then === 'function') {
+          promise.then(() => { acting = false })
+        } else {
+          acting = false
+        }
         setViewState && dispatch(setViewState(undoItem.beforeState))
-        acting = false
       }
     }
       break
@@ -32,8 +36,12 @@ export default function createUndoMiddleware({getViewState, setViewState, revert
       if (redoItem) {
         acting = true
         setViewState && dispatch(setViewState(redoItem.beforeState))
-        dispatch(redoItem.action)
-        acting = false
+        const promise = dispatch(redoItem.action)
+        if (typeof promise.then === 'function') {
+          promise.then(() => { acting = false })
+        } else {
+          acting = false
+        }
       }
     }
       break
